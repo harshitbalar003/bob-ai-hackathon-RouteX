@@ -2,6 +2,22 @@ import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useExcursions } from '@/lib/queries';
 
+/** Dev-only data mode indicator — shows MOCK or API in bottom-right corner. */
+function DataModeIndicator() {
+  const source = import.meta.env.VITE_DATA_SOURCE ?? 'mock';
+  const isApi = source === 'api';
+  return (
+    <div
+      className={`fixed bottom-3 right-3 z-50 px-2 py-0.5 rounded text-[10px] font-mono tracking-widest opacity-60 pointer-events-none select-none
+        ${isApi ? 'bg-accent-track/20 text-accent-track border border-accent-track/30' : 'bg-surface-2 text-text-muted border border-border-subtle'}`}
+      title={isApi ? 'Live API data (VITE_DATA_SOURCE=api)' : 'Fixture data (VITE_DATA_SOURCE=mock)'}
+      aria-hidden="true"
+    >
+      {isApi ? 'API' : 'MOCK'}
+    </div>
+  );
+}
+
 const NAV_LINKS = [
   { to: '/', label: 'Control Tower', exact: true },
   { to: '/cold-chain', label: 'Cold Chain' },
@@ -58,6 +74,8 @@ export function AppLayout() {
       <main className="flex-1 overflow-auto">
         <Outlet />
       </main>
+
+      <DataModeIndicator />
     </div>
   );
 }

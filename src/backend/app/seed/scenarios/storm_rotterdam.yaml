@@ -1,0 +1,544 @@
+# app/seed/scenarios/storm_rotterdam.yaml
+# ─────────────────────────────────────────────────────────────────────────────
+# Schema version: 1
+# This file is the single source of truth for the demo world.
+# python -m app.seed --seed 42 reads this file + applies the random seed.
+# All timestamps are expressed as UTC offsets (hours) from scenario_anchor_utc.
+# ─────────────────────────────────────────────────────────────────────────────
+
+meta:
+  id: storm_rotterdam
+  version: "1.0.0"
+  description: "Typhoon in East Asia + Rotterdam dock strike + A2 congestion"
+  scenario_anchor_utc: "2025-07-14T08:00:00Z"   # "now" for the scenario
+  random_seed: 42
+
+# ── Network nodes ─────────────────────────────────────────────────────────────
+# Real UN/LOCODE codes and published coordinates.
+# Source: UN/CEFACT LOCODE directory (public domain).
+# See docs/data-sources.md for full provenance.
+network_nodes:
+  # ── Asia – Pacific ──────────────────────────────────────────────────
+  - code: CNSGH
+    name: Shanghai Yangshan
+    node_type: port
+    lat: 30.62
+    lng: 122.07
+    country: CN
+
+  - code: CNNGB
+    name: Ningbo-Zhoushan
+    node_type: port
+    lat: 29.87
+    lng: 121.55
+    country: CN
+
+  - code: CNXMN
+    name: Xiamen
+    node_type: port
+    lat: 24.45
+    lng: 118.07
+    country: CN
+
+  - code: CNQIN
+    name: Qingdao
+    node_type: port
+    lat: 36.07
+    lng: 120.38
+    country: CN
+
+  - code: JPYOK
+    name: Yokohama
+    node_type: port
+    lat: 35.45
+    lng: 139.65
+    country: JP
+
+  - code: JPOSA
+    name: Osaka
+    node_type: port
+    lat: 34.65
+    lng: 135.43
+    country: JP
+
+  - code: KRPUS
+    name: Busan
+    node_type: port
+    lat: 35.10
+    lng: 129.04
+    country: KR
+
+  - code: SGSIN
+    name: Singapore
+    node_type: port
+    lat: 1.26
+    lng: 103.82
+    country: SG
+
+  - code: MYPEN
+    name: Penang
+    node_type: port
+    lat: 5.41
+    lng: 100.35
+    country: MY
+
+  - code: HKHKG
+    name: Hong Kong
+    node_type: port
+    lat: 22.31
+    lng: 114.17
+    country: HK
+
+  # ── Middle East / Indian Ocean ───────────────────────────────────────
+  - code: AEDXB
+    name: Dubai Jebel Ali
+    node_type: port
+    lat: 25.01
+    lng: 55.06
+    country: AE
+
+  - code: INBOM
+    name: Mumbai JNPT
+    node_type: port
+    lat: 18.95
+    lng: 72.95
+    country: IN
+
+  - code: EGPSD
+    name: Port Said
+    node_type: port
+    lat: 31.27
+    lng: 32.31
+    country: EG
+
+  # ── Europe ────────────────────────────────────────────────────────────
+  - code: NLRTM
+    name: Rotterdam ECT Delta
+    node_type: port
+    lat: 51.90
+    lng: 4.15
+    country: NL
+
+  - code: DEHAM
+    name: Hamburg
+    node_type: port
+    lat: 53.54
+    lng: 9.97
+    country: DE
+
+  - code: BEFRA
+    name: Antwerp
+    node_type: port
+    lat: 51.23
+    lng: 4.42
+    country: BE
+
+  - code: GBFXT
+    name: Felixstowe
+    node_type: port
+    lat: 51.96
+    lng: 1.35
+    country: GB
+
+  - code: FRLEH
+    name: Le Havre
+    node_type: port
+    lat: 49.49
+    lng: 0.11
+    country: FR
+
+  - code: ESALG
+    name: Algeciras
+    node_type: port
+    lat: 36.13
+    lng: -5.45
+    country: ES
+
+  # ── European inland hubs ─────────────────────────────────────────────
+  - code: DESTR
+    name: Stuttgart Logistics Hub
+    node_type: hub
+    lat: 48.78
+    lng: 9.18
+    country: DE
+
+  - code: DEULM
+    name: Ulm Rail Terminal
+    node_type: hub
+    lat: 48.40
+    lng: 9.99
+    country: DE
+
+  - code: DEKHE
+    name: Karlsruhe Hub
+    node_type: hub
+    lat: 49.00
+    lng: 8.40
+    country: DE
+
+  - code: NLMSV
+    name: Maasvlakte Terminal
+    node_type: hub
+    lat: 51.95
+    lng: 4.02
+    country: NL
+
+  - code: PLWAW
+    name: Warsaw Distribution Centre
+    node_type: hub
+    lat: 52.23
+    lng: 20.99
+    country: PL
+
+  - code: CZPRG
+    name: Prague Rail Terminal
+    node_type: hub
+    lat: 50.07
+    lng: 14.44
+    country: CZ
+
+  # ── Americas ─────────────────────────────────────────────────────────
+  - code: USJFK
+    name: New York JFK Air Cargo
+    node_type: airport
+    lat: 40.63
+    lng: -73.78
+    country: US
+
+  - code: USATL
+    name: Atlanta Hartsfield Air Cargo
+    node_type: airport
+    lat: 33.64
+    lng: -84.43
+    country: US
+
+  - code: USLAX
+    name: Los Angeles Air Cargo
+    node_type: airport
+    lat: 33.94
+    lng: -118.40
+    country: US
+
+  - code: BRSSZ
+    name: Santos Container Terminal
+    node_type: port
+    lat: -23.96
+    lng: -46.32
+    country: BR
+
+  # ── Air hubs ──────────────────────────────────────────────────────────
+  - code: DEFRK  # Frankfurt Airport (air hub)
+    name: Frankfurt Air Cargo Hub
+    node_type: airport
+    lat: 50.03
+    lng: 8.57
+    country: DE
+
+  - code: GBLON  # Heathrow
+    name: London Heathrow Air Cargo
+    node_type: airport
+    lat: 51.47
+    lng: -0.46
+    country: GB
+
+  - code: AEDXBA  # Dubai Airport (air hub — distinct from sea port)
+    name: Dubai International Air Cargo
+    node_type: airport
+    lat: 25.25
+    lng: 55.36
+    country: AE
+
+# ── Lanes ─────────────────────────────────────────────────────────────────────
+# transit_hours: estimated from great-circle distance and typical schedules.
+# cost_per_unit: USD/kg (synthetic). capacity: TEU or pallets.
+# reefer_capable: true where refrigerated service is commonly available.
+lanes:
+  # Asia–Europe deep-sea
+  - {from: CNSGH, to: SGSIN, mode: ocean, carrier: "COSCO", transit_hours: 72,  cost_per_unit: 1.20, capacity: 18000, reefer_capable: true}
+  - {from: SGSIN, to: AEDXB, mode: ocean, carrier: "MSC",   transit_hours: 168, cost_per_unit: 1.80, capacity: 14000, reefer_capable: true}
+  - {from: AEDXB, to: EGPSD, mode: ocean, carrier: "MSC",   transit_hours: 96,  cost_per_unit: 1.50, capacity: 14000, reefer_capable: true}
+  - {from: EGPSD, to: NLRTM, mode: ocean, carrier: "MSC",   transit_hours: 168, cost_per_unit: 1.90, capacity: 14000, reefer_capable: true}
+  - {from: CNSGH, to: NLRTM, mode: ocean, carrier: "Maersk", transit_hours: 504, cost_per_unit: 1.60, capacity: 18000, reefer_capable: true}
+  - {from: CNNGB, to: NLRTM, mode: ocean, carrier: "Maersk", transit_hours: 480, cost_per_unit: 1.60, capacity: 18000, reefer_capable: true}
+  - {from: CNQIN, to: NLRTM, mode: ocean, carrier: "CMA CGM", transit_hours: 528, cost_per_unit: 1.65, capacity: 16000, reefer_capable: true}
+  - {from: KRPUS, to: DEHAM, mode: ocean, carrier: "Hapag-Lloyd", transit_hours: 480, cost_per_unit: 1.70, capacity: 14000, reefer_capable: true}
+  - {from: JPYOK, to: NLRTM, mode: ocean, carrier: "MOL", transit_hours: 600, cost_per_unit: 1.80, capacity: 12000, reefer_capable: true}
+  - {from: HKHKG, to: GBFXT, mode: ocean, carrier: "Evergreen", transit_hours: 528, cost_per_unit: 1.65, capacity: 14000, reefer_capable: true}
+  - {from: HKHKG, to: DEHAM, mode: ocean, carrier: "OOCL",    transit_hours: 504, cost_per_unit: 1.60, capacity: 14000, reefer_capable: true}
+  - {from: SGSIN, to: DEHAM, mode: ocean, carrier: "Maersk",  transit_hours: 432, cost_per_unit: 1.55, capacity: 18000, reefer_capable: true}
+  - {from: SGSIN, to: GBFXT, mode: ocean, carrier: "CMA CGM", transit_hours: 456, cost_per_unit: 1.65, capacity: 16000, reefer_capable: true}
+  - {from: MYPEN, to: NLRTM, mode: ocean, carrier: "APL",     transit_hours: 480, cost_per_unit: 1.55, capacity: 12000, reefer_capable: true}
+  - {from: INBOM, to: NLRTM, mode: ocean, carrier: "Hapag-Lloyd", transit_hours: 384, cost_per_unit: 1.70, capacity: 12000, reefer_capable: true}
+
+  # Americas – Europe
+  - {from: BRSSZ, to: NLRTM, mode: ocean, carrier: "Hamburg Süd", transit_hours: 336, cost_per_unit: 2.10, capacity: 10000, reefer_capable: true}
+  - {from: USJFK, to: NLRTM, mode: ocean, carrier: "MSC", transit_hours: 168, cost_per_unit: 2.20, capacity: 8000, reefer_capable: false}
+
+  # European short-sea / feeder
+  - {from: NLRTM, to: DEHAM, mode: ocean, carrier: "Unifeeder", transit_hours: 24, cost_per_unit: 0.80, capacity: 2000, reefer_capable: true}
+  - {from: NLRTM, to: GBFXT, mode: ocean, carrier: "DFDS",      transit_hours: 12, cost_per_unit: 0.90, capacity: 1000, reefer_capable: true}
+  - {from: DEHAM, to: GBFXT, mode: ocean, carrier: "DFDS",      transit_hours: 18, cost_per_unit: 0.85, capacity: 1000, reefer_capable: false}
+  - {from: FRLEH, to: NLRTM, mode: ocean, carrier: "Unifeeder", transit_hours: 18, cost_per_unit: 0.75, capacity: 1500, reefer_capable: false}
+  - {from: ESALG, to: NLRTM, mode: ocean, carrier: "CMA CGM",   transit_hours: 72, cost_per_unit: 1.00, capacity: 4000, reefer_capable: true}
+
+  # European road (Rotterdam hub → inland)
+  - {from: NLRTM, to: DESTR, mode: road, carrier: "DB Schenker", transit_hours: 8,  cost_per_unit: 3.50, capacity: 33, reefer_capable: true}
+  - {from: NLRTM, to: DEULM, mode: road, carrier: "DB Schenker", transit_hours: 9,  cost_per_unit: 3.80, capacity: 33, reefer_capable: true}
+  - {from: NLRTM, to: PLWAW, mode: road, carrier: "DHL Freight", transit_hours: 18, cost_per_unit: 4.50, capacity: 33, reefer_capable: true}
+  - {from: NLRTM, to: CZPRG, mode: road, carrier: "Raben Group", transit_hours: 12, cost_per_unit: 4.00, capacity: 33, reefer_capable: true}
+  - {from: DEHAM, to: DESTR, mode: road, carrier: "Kühne+Nagel", transit_hours: 7,  cost_per_unit: 3.20, capacity: 33, reefer_capable: true}
+  - {from: DEHAM, to: PLWAW, mode: road, carrier: "DHL Freight", transit_hours: 14, cost_per_unit: 4.20, capacity: 33, reefer_capable: false}
+  - {from: DESTR, to: CZPRG, mode: road, carrier: "Gebrüder Weiss", transit_hours: 5, cost_per_unit: 2.80, capacity: 33, reefer_capable: false}
+  - {from: NLMSV, to: DESTR, mode: road, carrier: "DSV",         transit_hours: 8,  cost_per_unit: 3.60, capacity: 33, reefer_capable: true}
+  - {from: NLRTM, to: DEKHE, mode: road, carrier: "DB Schenker", transit_hours: 7,  cost_per_unit: 3.30, capacity: 33, reefer_capable: false}
+
+  # European rail
+  - {from: DEHAM, to: CNSGH, mode: rail, carrier: "DB Cargo",    transit_hours: 336, cost_per_unit: 2.80, capacity: 40, reefer_capable: false}
+  - {from: NLRTM, to: DEFRK, mode: rail, carrier: "DB Cargo",    transit_hours: 6,   cost_per_unit: 1.20, capacity: 40, reefer_capable: false}
+  - {from: DEFRK, to: PLWAW, mode: rail, carrier: "PKP Cargo",   transit_hours: 12,  cost_per_unit: 1.80, capacity: 40, reefer_capable: false}
+  - {from: DEFRK, to: CZPRG, mode: rail, carrier: "DB Cargo",    transit_hours: 6,   cost_per_unit: 1.50, capacity: 40, reefer_capable: false}
+  - {from: DEHAM, to: NLRTM, mode: rail, carrier: "DB Cargo",    transit_hours: 3,   cost_per_unit: 0.90, capacity: 40, reefer_capable: false}
+
+  # Air (intercontinental)
+  - {from: CNSGH, to: DEFRK, mode: air, carrier: "Lufthansa Cargo", transit_hours: 14, cost_per_unit: 12.0, capacity: 50, reefer_capable: true}
+  - {from: SGSIN, to: DEFRK, mode: air, carrier: "Singapore Airlines Cargo", transit_hours: 12, cost_per_unit: 11.5, capacity: 50, reefer_capable: true}
+  - {from: AEDXB,  to: GBLON, mode: air, carrier: "Emirates SkyCargo", transit_hours: 7, cost_per_unit: 10.0, capacity: 60, reefer_capable: true}
+  - {from: AEDXBA, to: GBLON, mode: air, carrier: "Emirates SkyCargo", transit_hours: 7, cost_per_unit: 10.0, capacity: 60, reefer_capable: true}
+  - {from: AEDXBA, to: USATL, mode: air, carrier: "Emirates SkyCargo", transit_hours: 14, cost_per_unit: 13.0, capacity: 60, reefer_capable: true}
+  - {from: INBOM, to: DEFRK, mode: air, carrier: "Air India Cargo", transit_hours: 10, cost_per_unit: 11.0, capacity: 40, reefer_capable: true}
+  - {from: DEFRK, to: USJFK, mode: air, carrier: "Lufthansa Cargo", transit_hours: 9, cost_per_unit: 11.0, capacity: 50, reefer_capable: true}
+  - {from: GBLON, to: USJFK, mode: air, carrier: "British Airways Cargo", transit_hours: 8, cost_per_unit: 12.0, capacity: 45, reefer_capable: true}
+  - {from: DEFRK, to: USATL, mode: air, carrier: "Lufthansa Cargo", transit_hours: 10, cost_per_unit: 11.5, capacity: 50, reefer_capable: true}
+  - {from: SGSIN, to: USLAX, mode: air, carrier: "Singapore Airlines Cargo", transit_hours: 16, cost_per_unit: 13.5, capacity: 50, reefer_capable: true}
+
+# ── Disruptions ───────────────────────────────────────────────────────────────
+disruptions:
+  - id: dis-001
+    type: weather
+    severity: critical
+    confidence: 0.87
+    headline: "Typhoon Krathon: Severe storm disrupting East Asia / South China Sea shipping lanes"
+    detail: >
+      A category-4 equivalent typhoon is tracking north-northeast across the South China
+      Sea, generating sustained winds exceeding 150 km/h and wave heights above 8 m.
+      Port operations at Shanghai Yangshan, Ningbo-Zhoushan, Xiamen, and Qingdao are
+      suspended or severely curtailed.
+    source: "Joint Typhoon Warning Center (JTWC) Feed"
+    started_at_offset_h: -48
+    expected_resolution_at: null
+    area:
+      center: {lat: 31.2, lng: 121.5, label: "Shanghai", unlocode: CNSGH}
+      radius_km: 800
+    affected_nodes: [CNSGH, CNNGB, CNXMN, CNQIN]
+
+  - id: dis-002
+    type: labour_action
+    severity: major
+    confidence: 0.72
+    headline: "Port of Rotterdam dock workers strike: container terminal operations halted"
+    detail: >
+      Members of the FNV Havens union have commenced an indefinite strike action following
+      a breakdown in wage negotiations. Container loading/unloading at ECT Delta and RWG
+      terminals is at a standstill. Mediation talks are scheduled.
+    source: "Lloyd's List Intelligence"
+    started_at_offset_h: -72
+    expected_resolution_at_offset_h: 168
+    area:
+      polygon:
+        - [51.96, 4.02]
+        - [51.97, 4.18]
+        - [51.93, 4.22]
+        - [51.89, 4.25]
+        - [51.86, 4.15]
+        - [51.88, 4.00]
+        - [51.93, 3.97]
+        - [51.96, 4.02]
+    affected_nodes: [NLRTM, NLMSV]
+
+  - id: dis-003
+    type: congestion
+    severity: minor
+    confidence: 0.55
+    headline: "A2 motorway corridor Germany: road works causing significant freight delays"
+    detail: >
+      Planned resurfacing and bridge maintenance works between Karlsruhe and Ulm are
+      causing queue lengths of up to 35 km during peak hours. HGV transit times have
+      increased by an average of 4.5 hours.
+    source: "BASt Traffic Report"
+    started_at_offset_h: -24
+    expected_resolution_at_offset_h: 48
+    area:
+      center: {lat: 48.78, lng: 9.18, label: "Stuttgart / A2 Corridor"}
+      radius_km: 120
+    affected_nodes: [DESTR, DEULM, DEKHE]
+
+# ── Shipment cohorts (cohort-generated; non-scripted shipments) ───────────────
+shipment_cohorts:
+  - id: asia_europe_ocean
+    count: 20
+    modes: [ocean]
+    status_distribution: {on_track: 0.6, at_risk: 0.3, delayed: 0.1}
+    cold_chain: false
+    origin_pool: [CNSGH, CNQIN, JPYOK, SGSIN, HKHKG]
+    destination_pool: [NLRTM, DEHAM, GBFXT]
+    disruption_exposure: [dis-001, dis-002]
+
+  - id: european_inland
+    count: 15
+    modes: [road, rail]
+    status_distribution: {on_track: 0.5, at_risk: 0.3, delayed: 0.2}
+    cold_chain: false
+    origin_pool: [NLRTM, DEHAM, NLMSV]
+    destination_pool: [DESTR, PLWAW, CZPRG]
+    disruption_exposure: [dis-003]
+
+  - id: air_cargo
+    count: 20
+    modes: [air]
+    status_distribution: {on_track: 0.7, at_risk: 0.2, delayed: 0.1}
+    cold_chain: false
+    origin_pool: [AEDXB, INBOM, SGSIN, CNSGH]
+    destination_pool: [GBLON, USJFK, DEFRK]
+    disruption_exposure: []
+
+  - id: mixed_global
+    count: 59
+    modes: [ocean, rail, road, air]
+    status_distribution: {on_track: 0.65, at_risk: 0.25, delayed: 0.10}
+    cold_chain: false
+    origin_pool: [CNSGH, SGSIN, KRPUS, HKHKG, AEDXB, INBOM, BRSSZ, MYPEN]
+    destination_pool: [NLRTM, DEHAM, GBFXT, BEFRA, FRLEH, USJFK, USATL]
+    disruption_exposure: [dis-001, dis-002, dis-003]
+
+# ── Scripted cold-chain shipments (exact — not cohort generated) ──────────────
+# These six shipments are hard-wired by ID to produce deterministic demo cases.
+scripted_shipments:
+  - id: shp-101
+    label: "clean_run_minor_excursion"
+    description: "GDP vaccines — clean run with one door-correlated minor excursion"
+    shipper: "Pharmalink GmbH"
+    consignee: "BioTherm Logistics NL"
+    origin: CNSGH
+    destination: NLRTM
+    modes: [ocean, road]
+    cold_chain: true
+    regulatory_regime: GDP
+    temp_range_c: {min: 2.0, max: 8.0}
+    cargo_description: "Vaccines — multivalent DTP-HepB-Hib"
+    cargo_value_usd: 285000
+    leg_count: 2
+    eta_original_offset_h: 504
+    disruption_exposure: [dis-001]
+    telemetry_script: clean_run_minor_excursion
+
+  - id: shp-102
+    label: "clean_run"
+    description: "WHO_PQS vaccines — fully clean run, no excursions"
+    shipper: "VaccineChain Asia"
+    consignee: "WHO Regional Cold Store"
+    origin: SGSIN
+    destination: DEFRK
+    modes: [air]
+    cold_chain: true
+    regulatory_regime: WHO_PQS
+    temp_range_c: {min: 2.0, max: 8.0}
+    cargo_description: "Vaccines — oral polio (freeze-sensitive)"
+    cargo_value_usd: 420000
+    leg_count: 1
+    eta_original_offset_h: 14
+    disruption_exposure: []
+    telemetry_script: clean_run
+
+  - id: shp-103
+    label: "critical_excursion_open"
+    description: "FSMA produce — CRITICAL open excursion, power disconnection in yard — the demo"
+    shipper: "FreshRoute Logistics"
+    consignee: "REWE Distribution DE"
+    origin: AEDXB
+    destination: NLRTM
+    modes: [ocean, road]
+    cold_chain: true
+    regulatory_regime: FSMA
+    temp_range_c: {min: 0.0, max: 4.0}
+    cargo_description: "Fresh produce — stone fruit and berries"
+    cargo_value_usd: 148000
+    leg_count: 2
+    eta_original_offset_h: 264
+    disruption_exposure: [dis-002]
+    telemetry_script: critical_excursion_open
+
+  - id: shp-104
+    label: "freezing_excursion_resolved"
+    description: "WHO_PQS vaccines — freeze excursion (below min), resolved"
+    shipper: "NovaCold Biologics"
+    consignee: "NHS Supply Chain UK"
+    origin: INBOM
+    destination: GBLON
+    modes: [air]
+    cold_chain: true
+    regulatory_regime: WHO_PQS
+    temp_range_c: {min: 2.0, max: 8.0}
+    cargo_description: "Vaccines — freeze-sensitive biologics"
+    cargo_value_usd: 510000
+    leg_count: 1
+    eta_original_offset_h: 10
+    disruption_exposure: []
+    telemetry_script: freezing_excursion_resolved
+
+  - id: shp-105
+    label: "sensor_gap_and_stuck"
+    description: "GDP pharma — 3.5h sensor gap mid-leg + stuck sensor 90min"
+    shipper: "MediFreeze Logistics"
+    consignee: "Sanofi Distribution AE"
+    origin: AEDXBA
+    destination: USATL
+    modes: [air]
+    cold_chain: true
+    regulatory_regime: GDP
+    temp_range_c: {min: 2.0, max: 8.0}
+    cargo_description: "Pharmaceutical — insulin pen cartridges"
+    cargo_value_usd: 620000
+    leg_count: 2
+    eta_original_offset_h: 16
+    disruption_exposure: []
+    telemetry_script: sensor_gap_and_stuck
+
+  - id: shp-106
+    label: "ambient_clean_run"
+    description: "USP_1079 ambient pharma — clean run, wide range"
+    shipper: "ChemRoute Global"
+    consignee: "Bayer AG Warehouse DE"
+    origin: KRPUS
+    destination: DEHAM
+    modes: [ocean]
+    cold_chain: true
+    regulatory_regime: USP_1079
+    temp_range_c: {min: 15.0, max: 25.0}
+    cargo_description: "Pharmaceutical — solid-dose tablets (ambient-sensitive)"
+    cargo_value_usd: 95000
+    leg_count: 1
+    eta_original_offset_h: 480
+    disruption_exposure: []
+    telemetry_script: clean_run
+
+# ── Fleet ─────────────────────────────────────────────────────────────────────
+fleet:
+  total_count: 40
+  idle_count: 18            # first 18 assets will be idle
+  # Idle hours distribution: realistic long tail
+  # first 2: reefer containers near shp-103 (guaranteed for the demo)
+  reefer_idle_near: shp-103
+  idle_hours_distribution:
+    # [min_hours, max_hours, count] — defines buckets for the tail
+    - [1,   12,  4]    # recently idled
+    - [12,  48,  6]    # day-to-two
+    - [48, 120,  5]    # 2–5 days (wasted-hours tail)
+    - [120, 240, 3]    # critical waste
+  asset_type_distribution:
+    truck: 12
+    trailer: 10
+    container: 8
+    reefer_container: 7
+    vessel: 3
+  home_depot_pool:
+    [NLRTM, DEHAM, DESTR, BEFRA, GBFXT, AEDXB, SGSIN, CNSGH]

@@ -4,6 +4,9 @@ app/models/orm.py — SQLAlchemy ORM table definitions.
 Design: store JSON columns for complex nested fields (legs, cargo, etc.)
 rather than full normalisation — this keeps the schema change cost low for a
 hackathon while preserving the ability to filter on indexed top-level columns.
+
+network_nodes and lanes are fully normalised — they are queried by the
+rerouting engine on every path-search and benefit from indexed FK columns.
 """
 from __future__ import annotations
 
@@ -14,11 +17,14 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     Float,
+    ForeignKey,
+    Index,
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -59,6 +65,14 @@ class DisruptionRow(Base):
 
 class SensorReadingRow(Base):
     __tablename__ = "sensor_readings"
+    __table_args__ = (
+        # Composite index on (shipment_id, timestamp) — the hot path for
+        # excursion detection and the /shipments/{id}/readings endpoint.
+        # With 500k readings a table scan here kills demo responsiveness.
+        Index("ix_sensor_readings_shipment_ts", "shipment_id", "timestamp"),
+        # Unique constraint: makes ingestion idempotent
+        UniqueConstraint("sensor_id", "timestamp", name="uq_sensor_reading"),
+    )
 
     id: Mapped[str] = mapped_column(String, primary_key=True)  # canonical reading_id
     shipment_id: Mapped[str] = mapped_column(String, index=True)
@@ -131,6 +145,68 @@ class RedeploymentMatchRow(Base):
     utilisation_gain_pct: Mapped[float] = mapped_column(Float)
     rationale: Mapped[str] = mapped_column(Text)
     generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class NetworkNodeRow(Base):
+    """
+    A port, airport, inland hub, or border crossing.
+    Codes are UN/LOCODE (5-char) or IATA (3-char) for airports.
+    All reference data — see docs/data-sources.md for provenance.
+    """
+    __tablename__ = "network_nodes"
+
+    code: Mapped[str] = mapped_column(String(10), primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    # type: 'port' | 'airport' | 'hub' | 'border'
+    node_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    lat: Mapped[float] = mapped_column(Float, nullable=False)
+    lng: Mapped[float] = mapped_column(Float, nullable=False)
+    country: Mapped[str] = mapped_column(String(2), nullable=False, index=True)
+
+    lanes_from: Mapped[list["LaneRow"]] = relationship(
+        "LaneRow", back_populates="from_node_obj", foreign_keys="LaneRow.from_node"
+    )
+    lanes_to: Mapped[list["LaneRow"]] = relationship(
+        "LaneRow", back_populates="to_node_obj", foreign_keys="LaneRow.to_node"
+    )
+
+
+class LaneRow(Base):
+    """
+    A direct lane between two network nodes on a given mode/carrier.
+
+    Indexed on (from_node, mode) — this is the hot path in the rerouting
+    engine when building the outbound adjacency set for a node.
+
+    cost_per_unit is synthetic (USD per kg); transit_hours is derived from
+    published route data and carrier schedules.  See docs/data-sources.md.
+    """
+    __tablename__ = "lanes"
+    __table_args__ = (
+        Index("ix_lanes_from_node_mode", "from_node", "mode"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    from_node: Mapped[str] = mapped_column(
+        String(10), ForeignKey("network_nodes.code"), nullable=False
+    )
+    to_node: Mapped[str] = mapped_column(
+        String(10), ForeignKey("network_nodes.code"), nullable=False
+    )
+    # mode: 'ocean' | 'air' | 'road' | 'rail'
+    mode: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    carrier: Mapped[str] = mapped_column(String, nullable=False)
+    transit_hours: Mapped[float] = mapped_column(Float, nullable=False)
+    cost_per_unit: Mapped[float] = mapped_column(Float, nullable=False)
+    capacity: Mapped[float] = mapped_column(Float, nullable=False)
+    reefer_capable: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    from_node_obj: Mapped["NetworkNodeRow"] = relationship(
+        "NetworkNodeRow", back_populates="lanes_from", foreign_keys=[from_node]
+    )
+    to_node_obj: Mapped["NetworkNodeRow"] = relationship(
+        "NetworkNodeRow", back_populates="lanes_to", foreign_keys=[to_node]
+    )
 
 
 class RerouteOptionRow(Base):
