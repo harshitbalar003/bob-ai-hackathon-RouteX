@@ -1,0 +1,59 @@
+# app/rules/fsma.yaml
+# FDA Food Safety Modernization Act — Sanitary Transportation Rule
+# 21 CFR Part 1, Subpart O (§1.900–§1.934)
+# Specific reference: §1.908 — Requirements for shippers, loaders, carriers, receivers
+#
+# Temperature-controlled food: maximum 4°C (40°F) for refrigerated products
+# Frozen products: ≤ -18°C (0°F)
+#
+# Version history:
+#   1.0.0 — initial release
+
+id: "FSMA"
+version: "1.0.0"
+display_name: "FDA FSMA Sanitary Transportation Rule (21 CFR §1.908)"
+citation_base: "21 CFR Part 1 Subpart O"
+
+# Refrigerated food: ≤4°C (FDA requires ≤40°F / 4.4°C; we use 4.0°C as conservative floor)
+# No lower bound specified by FSMA itself; we use -1°C to catch near-freeze events
+allowed_range_c:
+  min: -1.0
+  max: 4.0
+
+severity_rules:
+
+  # Sustained breach >2h above 4°C — continuous cold chain broken, product integrity at risk
+  - id: "FSMA-CRITICAL-SUSTAINED"
+    severity: "critical"
+    citation: "21 CFR §1.908(b)(1)"
+    min_degree_minutes: 200.0
+    min_minutes_out_of_range: 120
+    applies_to_cargo: null
+
+  # Deep freeze event for products that must not freeze (e.g. fresh produce, beverages)
+  - id: "FSMA-CRITICAL-FREEZE"
+    severity: "critical"
+    citation: "21 CFR §1.908(b)(1)"
+    below_range: true
+    min_degree_minutes: 50.0
+    applies_to_cargo: ["fresh_produce", "beverages", "dairy"]
+
+  # Breach >1h — material food safety concern
+  - id: "FSMA-MAJOR"
+    severity: "major"
+    citation: "21 CFR §1.908(b)(1)"
+    min_degree_minutes: 60.0
+    min_minutes_out_of_range: 60
+
+  # Any breach — monitoring required
+  - id: "FSMA-MINOR"
+    severity: "minor"
+    citation: "21 CFR §1.908(b)(1)"
+    min_degree_minutes: 0.0
+    min_minutes_out_of_range: 0
+
+disposition_map:
+  critical: "quarantine_pending_QA"
+  major: "quarantine_pending_QA"
+  minor: "quarantine_pending_QA"   # FSMA is strict — minor food safety issues need QA sign-off
+  informational: "release"

@@ -1,0 +1,63 @@
+# app/rules/gdp.yaml
+# EU Good Distribution Practice (GDP) — Guidelines 2013/C 343/01
+# Annex 5: Specific guidance for temperature-controlled medicinal products
+#
+# Version history:
+#   1.0.0 — initial release
+
+id: "GDP"
+version: "1.0.0"
+display_name: "EU Good Distribution Practice (GDP 2013/C 343/01)"
+citation_base: "GDP Annex 5"
+
+# Standard pharmaceutical cold chain: 2–8°C
+allowed_range_c:
+  min: 2.0
+  max: 8.0
+
+# Rules are evaluated in ORDER — first match wins.
+# All conditions within a rule must hold simultaneously (logical AND).
+severity_rules:
+
+  # Freezing is catastrophic for most biologics — lower degree-minute threshold
+  - id: "GDP-CRITICAL-FREEZE"
+    severity: "critical"
+    citation: "GDP Annex 5.5"
+    below_range: true
+    min_degree_minutes: 60.0
+    applies_to_cargo: ["vaccines", "biologics", "insulin", "blood_products"]
+
+  # Any freeze below 0°C regardless of duration — structural ice crystal damage
+  - id: "GDP-CRITICAL-FREEZE-ZERO"
+    severity: "critical"
+    citation: "GDP Annex 5.5"
+    below_range: true
+    max_temp_exceeded_by_c: 2.0   # >2°C below minimum (0°C or below for 2–8 range)
+    applies_to_cargo: null
+
+  # Sustained major warming: >2h out of range with significant degree-minutes
+  - id: "GDP-CRITICAL-WARM"
+    severity: "critical"
+    citation: "GDP Annex 5.5"
+    min_degree_minutes: 300.0
+    min_minutes_out_of_range: 120
+
+  # Significant warming: >1h with material degree-minutes accumulation
+  - id: "GDP-MAJOR-WARM"
+    severity: "major"
+    citation: "GDP Annex 5.5"
+    min_degree_minutes: 100.0
+    min_minutes_out_of_range: 60
+
+  # Any excursion, even brief — monitoring required
+  - id: "GDP-MINOR"
+    severity: "minor"
+    citation: "GDP Annex 5.5"
+    min_degree_minutes: 0.0
+    min_minutes_out_of_range: 0
+
+disposition_map:
+  critical: "quarantine_pending_QA"
+  major: "quarantine_pending_QA"
+  minor: "release"
+  informational: "release"

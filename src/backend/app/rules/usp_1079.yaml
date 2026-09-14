@@ -1,0 +1,58 @@
+# app/rules/usp_1079.yaml
+# United States Pharmacopeia <1079> — Good Storage and Distribution Practices
+# for Drug Products
+# Reference: USP-NF General Chapter <1079>, current edition
+#
+# Controlled Room Temperature (CRT): 20–25°C, with excursions between 15–30°C permitted
+# Mean Kinetic Temperature (MKT) must not exceed 25°C
+#
+# Version history:
+#   1.0.0 — initial release
+
+id: "USP_1079"
+version: "1.0.0"
+display_name: "USP <1079> Good Storage and Distribution Practices"
+citation_base: "USP <1079>"
+
+# Controlled Room Temperature envelope
+allowed_range_c:
+  min: 15.0
+  max: 30.0
+
+severity_rules:
+
+  # Excursion above 40°C — product degradation certain
+  - id: "USP-CRITICAL-HEAT"
+    severity: "critical"
+    citation: "USP <1079> §Storage Conditions"
+    max_temp_exceeded_by_c: 10.0   # >10°C above max (i.e. >40°C)
+    min_minutes_out_of_range: 30
+    applies_to_cargo: null
+
+  # Excursion below 0°C — freezing of CRT product
+  - id: "USP-CRITICAL-FREEZE"
+    severity: "critical"
+    citation: "USP <1079> §Freezing"
+    below_range: true
+    max_temp_exceeded_by_c: 15.0   # >15°C below minimum (i.e. <0°C)
+    applies_to_cargo: null
+
+  # Sustained CRT excursion beyond permitted short-term exposure
+  - id: "USP-MAJOR-CRT"
+    severity: "major"
+    citation: "USP <1079> §Controlled Room Temperature"
+    min_degree_minutes: 200.0
+    min_minutes_out_of_range: 120
+
+  # Brief CRT excursion
+  - id: "USP-MINOR-CRT"
+    severity: "minor"
+    citation: "USP <1079> §Controlled Room Temperature"
+    min_degree_minutes: 0.0
+    min_minutes_out_of_range: 0
+
+disposition_map:
+  critical: "quarantine_pending_QA"
+  major: "quarantine_pending_QA"
+  minor: "release"
+  informational: "release"

@@ -1,0 +1,63 @@
+# app/rules/who_pqs.yaml
+# WHO Prequalification of Medicines Programme — Performance, Quality and Safety (PQS)
+# Temperature requirements for vaccine supply chains
+# Reference: WHO/PQS/E06 series; WHO Technical Report Series No. 961 Annex 9 (2011)
+#
+# Version history:
+#   1.0.0 — initial release
+
+id: "WHO_PQS"
+version: "1.0.0"
+display_name: "WHO Prequalification (PQS) — Vaccine Cold Chain"
+citation_base: "WHO TRS 961 Annex 9"
+
+# Vaccine cold chain: +2°C to +8°C (same envelope as GDP but stricter freeze rules)
+# Freeze-sensitive vaccines (e.g. DTP, Hep B, Hib) are destroyed by a single freeze event.
+allowed_range_c:
+  min: 2.0
+  max: 8.0
+
+severity_rules:
+
+  # Any freeze event for freeze-sensitive vaccines = critical (no degree-minute floor)
+  - id: "WHO-CRITICAL-FREEZE-SENSITIVE"
+    severity: "critical"
+    citation: "WHO TRS 961 Annex 9 §3.4"
+    below_range: true
+    min_degree_minutes: 0.0   # even momentary freeze is critical for these vaccines
+    applies_to_cargo: ["vaccines", "freeze_sensitive", "dtp", "hep_b", "hib"]
+
+  # General freeze exceeding threshold
+  - id: "WHO-CRITICAL-FREEZE"
+    severity: "critical"
+    citation: "WHO TRS 961 Annex 9 §3.4"
+    below_range: true
+    min_degree_minutes: 30.0
+    applies_to_cargo: null
+
+  # Sustained heat excursion >2h: product integrity at serious risk
+  - id: "WHO-CRITICAL-HEAT"
+    severity: "critical"
+    citation: "WHO TRS 961 Annex 9 §3.2"
+    min_degree_minutes: 240.0
+    min_minutes_out_of_range: 120
+
+  # Heat excursion >1h
+  - id: "WHO-MAJOR-HEAT"
+    severity: "major"
+    citation: "WHO TRS 961 Annex 9 §3.2"
+    min_degree_minutes: 60.0
+    min_minutes_out_of_range: 60
+
+  # Any excursion
+  - id: "WHO-MINOR"
+    severity: "minor"
+    citation: "WHO TRS 961 Annex 9 §3.1"
+    min_degree_minutes: 0.0
+    min_minutes_out_of_range: 0
+
+disposition_map:
+  critical: "quarantine_pending_QA"
+  major: "quarantine_pending_QA"
+  minor: "quarantine_pending_QA"   # WHO PQS is stricter — even minor requires QA review
+  informational: "release"
