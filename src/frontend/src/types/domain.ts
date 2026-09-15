@@ -192,7 +192,12 @@ export interface Excursion {
 
 // ─── Priority Queue item (cross-type, for Control Tower) ─────────────────────
 
-export type PriorityItemKind = 'shipment_exception' | 'excursion' | 'idle_asset';
+export type PriorityItemKind =
+  | 'shipment_exception'
+  | 'excursion'
+  | 'idle_asset'
+  /** ML prediction — dashed visual treatment, no regulatory citation */
+  | 'predicted_risk';
 
 export interface PriorityItem {
   id: string;
@@ -203,4 +208,30 @@ export interface PriorityItem {
   severity: Severity;
   href: string;
   updatedAt: string; // ISO UTC
+}
+
+// ─── ML Predictions ───────────────────────────────────────────────────────────
+// Backend-only at serving time; frontend receives these via /api/v1/predictions/*
+//
+// VISUAL CONTRACT:
+//   - Dashed/hatched badge, never solid
+//   - Show probability + horizon: "68% chance of breach within 4h"
+//   - NO regulatory citation ever
+//   - Below 50% confidence: watch item (informational), not alert
+//   - Forecast band on temperature chart: dashed forward-projected line
+//   - Tooltip shows top contributing features from model card (static)
+
+export interface Prediction {
+  id: string;
+  modelId: string;
+  modelVersion: string;
+  subjectType: 'shipment' | 'leg';
+  subjectId: string;
+  predictedAt: string; // ISO UTC
+  horizonHours: number; // 4.0 for excursion forecaster
+  /** Calibrated P(breach), 0–1. This is the value displayed to the operator. */
+  value: number;
+  confidence: number;
+  features: Record<string, number | string>;
+  baselineValue: number;
 }

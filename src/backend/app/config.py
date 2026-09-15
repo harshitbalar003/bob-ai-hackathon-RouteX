@@ -48,6 +48,13 @@ class Settings(BaseSettings):
     feature_sse: bool = False          # SSE stream; set FEATURE_SSE=true to enable
     watsonx_enabled: bool = False      # language layer; no key needed for fallback
 
+    # ── ML layer ──────────────────────────────────────────────────────────────
+    # Disabled by default — app is fully functional on heuristic baselines.
+    # Set ML_ENABLED=true only after running the training script and committing
+    # the artifacts under app/ml/artifacts/.
+    ml_enabled: bool = False
+    ml_artifacts_dir: str = ""         # empty = use default (app/ml/artifacts/)
+
     # ── watsonx.ai (optional) ─────────────────────────────────────────────────
     watsonx_api_key: str = ""
     watsonx_project_id: str = ""

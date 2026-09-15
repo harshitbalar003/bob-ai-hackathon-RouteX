@@ -54,12 +54,14 @@ submission:
     - "Geospatial disruption impact matching against incomplete shipment legs, scored on delay hours, cargo value at risk, remaining cold-chain-stable hours, and downstream leg cascade, with score components exposed"
     - "Reroute ranking on delay recovery, cost, CO2, and cold chain continuity, where options that break the cold chain are never recommended and 'accept the delay' competes as a first-class option"
     - "Idle fleet redeployment ranked by wasted capacity-hours rather than asset count, backed by an append-only decision audit trail that rebuilds idempotently from raw readings"
+    - "Excursion Forecaster (ML): P(temperature breach within 4h) for in-transit cold-chain shipments — calibrated HistGradientBoostingClassifier (scikit-learn only), parallel to the deterministic core, never replacing it. Disabled by default; system runs fully on heuristic baselines without it."
 
   tech_stack:
     languages: ["Python 3.11", "TypeScript"]
     frameworks: ["FastAPI", "SQLAlchemy 2.x", "Pydantic v2", "React 18", "Vite", "Tailwind CSS"]
     ibm_technologies: ["IBM Bob", "watsonx.ai"]
     databases: ["SQLite"]
+    ml: ["scikit-learn==1.5.2 (only ML dependency — no XGBoost, LightGBM, SHAP, or deep learning)"]
     other:
       - "MapLibre GL JS"
       - "Recharts"
@@ -107,6 +109,11 @@ submission:
     and impact engines. Tested on desktop Chrome and Firefox at 1440px; usable
     at 768px but not built for mobile. All shipment, party, cargo, and telemetry
     data is synthetic by design, per the hackathon data compliance rules.
+    The ML excursion forecaster is trained exclusively on data we generated:
+    its metrics (PR-AUC 1.0 on held-out seeds) demonstrate a working prediction
+    pipeline, not validated real-world accuracy. The model learns our thermal
+    generator, not real reefer physics. Proper validation would require a corpus
+    of real reefer sensor data across diverse routes and container types.
 
 # =============================================================================
 # ARTIFACT LOCATIONS

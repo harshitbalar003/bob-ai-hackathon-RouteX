@@ -1,10 +1,11 @@
 """
 app/engines/priority_queue.py — Priority queue ranking engine.
 
-Merges three item types into a single operator worklist:
-  - excursion         (cold chain breach)
+Merges four item types into a single operator worklist:
+  - excursion         (cold chain breach — deterministic, carries regulatory citation)
   - shipment_exception (ETA slip + disruption impact)
   - idle_asset        (wasted capacity-hours)
+  - predicted_risk    (ML prediction — distinct visual, no citation, never merged with excursions)
 
 Scoring is deterministic. Weights are in config. Components are returned
 alongside each item so the operator can see why item A ranks above item B.
@@ -202,6 +203,68 @@ def score_idle_asset(
     )
 
 
+# ── Predicted-risk scoring ────────────────────────────────────────────────────
+
+def score_predicted_risk(prediction_row) -> PriorityItemWithScore | None:
+    """
+    Score an ML excursion-risk prediction for the priority queue.
+
+    Visual contract (enforced here and in the UI):
+      - kind = predicted_risk (never excursion)
+      - No regulatory citation
+      - Headline shows probability and horizon, not severity label
+      - Score is capped below any confirmed excursion at equivalent probability
+        (confirmed excursions always outrank predictions at the same level)
+      - Below 50% probability: severity = informational (watch item)
+      - Above 50%: severity = minor
+    """
+    from app.models.orm import PredictionRow
+    from datetime import timezone
+
+    value = float(prediction_row.value)   # calibrated P(breach) 0–1
+
+    # Score: raw probability, capped at 59 so confirmed excursions always rank higher
+    # A confirmed critical excursion scores ~70+; predictions cap at 59.
+    score = round(min(value * 59.0, 59.0), 1)
+
+    sev = Severity.minor if value >= 0.5 else Severity.informational
+    watch_label = "WATCH" if value < 0.5 else "ALERT"
+    pct = round(value * 100, 0)
+    horizon = prediction_row.horizon_hours
+
+    headline = (
+        f"~ {pct:.0f}% breach risk within {horizon:.0f}h "
+        f"[{watch_label}] — no citation"
+    )
+    stake = (
+        f"Predicted P(breach)={pct:.0f}% · {prediction_row.subject_id} · "
+        "ML prediction only"
+    )
+
+    predicted_at = prediction_row.predicted_at
+    if predicted_at.tzinfo is None:
+        predicted_at = predicted_at.replace(tzinfo=timezone.utc)
+
+    item = PriorityItem(
+        id=f"pq-pred-{prediction_row.id}",
+        kind=PriorityItemKind.predicted_risk,
+        refId=prediction_row.subject_id,
+        headline=headline,
+        stake=stake,
+        severity=sev,
+        href=f"/shipments/{prediction_row.subject_id}",
+        updatedAt=predicted_at.isoformat(),
+    )
+    return PriorityItemWithScore(
+        item=item,
+        score=score,
+        score_components={
+            "predicted_probability": round(value * 100, 1),
+            "score_cap_note": "Capped at 59 so confirmed excursions always rank higher",
+        },
+    )
+
+
 # ── Merge and rank ────────────────────────────────────────────────────────────
 
 def build_priority_queue(
@@ -209,9 +272,15 @@ def build_priority_queue(
     shipment_rows: Sequence[ShipmentRow],
     fleet_rows: Sequence[FleetAssetRow],
     asset_ids_with_match: set[str],
+    prediction_rows: Sequence | None = None,
 ) -> list[PriorityItemWithScore]:
     """
     Merge all item types into a single ranked queue.
+
+    prediction_rows: optional list of PredictionRow objects from the ML layer.
+    When None (or ML disabled), the queue is identical to the pre-ML version.
+    Predicted-risk items are always scored below confirmed excursions.
+
     Tie-break: updatedAt descending (most recently updated floats up).
     """
     items: list[PriorityItemWithScore] = []
@@ -227,6 +296,13 @@ def build_priority_queue(
     for asset in fleet_rows:
         has_match = asset.id in asset_ids_with_match
         items.append(score_idle_asset(asset, has_match))
+
+    # ML predicted-risk items — only added when predictions are provided
+    if prediction_rows:
+        for pred in prediction_rows:
+            scored_pred = score_predicted_risk(pred)
+            if scored_pred is not None:
+                items.append(scored_pred)
 
     # Sort: primary = score desc, tie-break = updated_at desc
     items.sort(

@@ -13,6 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.engines.priority_queue import build_priority_queue
+from app.ml.predictions_store import get_excursion_risk_predictions
+from app.ml.registry import registry as ml_registry
 from app.models.orm import (
     ExcursionRow,
     FleetAssetRow,
@@ -32,9 +34,10 @@ async def get_priority_queue(
     """
     The merged, ranked operator worklist.
 
-    Merges open excursions, shipment exceptions/delays, and idle assets into
-    one comparable ordering. Each item carries its score and score_components
-    so the operator can see why it ranks where it does.
+    Merges open excursions, shipment exceptions/delays, idle assets, and
+    (when ML_ENABLED=true) ML excursion-risk predictions into one comparable
+    ordering. Predicted-risk items are visually distinct from confirmed
+    excursions and always rank below them.
     """
     # Open + recent excursions
     exc_stmt = select(ExcursionRow).order_by(ExcursionRow.started_at.desc()).limit(20)
@@ -58,11 +61,17 @@ async def get_priority_queue(
     match_result = await db.execute(match_stmt)
     asset_ids_with_match = set(match_result.scalars().all())
 
+    # ML predictions (optional — empty list when disabled)
+    prediction_rows = None
+    if ml_registry.is_enabled():
+        prediction_rows = await get_excursion_risk_predictions(db, limit=20)
+
     all_items = build_priority_queue(
         excursion_rows,
         shipment_rows,
         fleet_rows,
         asset_ids_with_match,
+        prediction_rows=prediction_rows,
     )
 
     page = all_items[skip : skip + limit]

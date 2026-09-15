@@ -18,5 +18,11 @@ PyJWT>=2.8.0
 pytest>=8.0.0
 pytest-asyncio>=0.23.0
 anyio>=4.3.0
+# ML layer — Model 1 (Excursion Forecaster). scikit-learn is the ONLY ML
+# dependency permitted. No XGBoost, LightGBM, SHAP, or deep learning.
+# Pin exactly: trained artifacts are unpickled and minor version changes warn/break.
+scikit-learn==1.5.2
+# pandas and pyarrow are corpus-generation + training deps; not required at serve time.
+# Install with: pip install pandas pyarrow
 # Optional watsonx.ai — only installed if WATSONX_ENABLED=true
 # ibm-watsonx-ai>=1.0.9

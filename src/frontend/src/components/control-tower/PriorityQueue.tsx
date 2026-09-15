@@ -12,9 +12,12 @@ const KIND_LABEL: Record<PriorityItem['kind'], string> = {
   shipment_exception: 'Shipment',
   excursion: 'Temperature breach',
   idle_asset: 'Idle asset',
+  /** ML prediction — labelled clearly so operators know this is not a confirmed breach */
+  predicted_risk: 'Predicted risk (ML)',
 };
 
 // Distinct left-edge colour per severity for scannable density
+// predicted_risk uses a dashed left border to signal it is not confirmed
 const SEVERITY_BORDER: Record<string, string> = {
   critical: 'border-l-accent-critical',
   major: 'border-l-accent-disruption',
@@ -36,6 +39,21 @@ const KIND_ICON: Record<PriorityItem['kind'], React.ReactNode> = {
   idle_asset: (
     <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
       <circle cx="5" cy="5" r="4" fill="none" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  ),
+  /**
+   * predicted_risk: dashed diamond — visually distinct from confirmed excursion (solid diamond).
+   * In a grayscale screenshot the dashed stroke makes the difference obvious.
+   */
+  predicted_risk: (
+    <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+      <polygon
+        points="5,1 9,5 5,9 1,5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeDasharray="2 1"
+      />
     </svg>
   ),
 };
@@ -95,18 +113,43 @@ export function PriorityQueue({ items }: PriorityQueueProps) {
                   <span className="text-sm text-text-primary font-medium leading-snug">
                     {item.headline}
                   </span>
-                  <SeverityBadge severity={item.severity} />
+                  {item.kind === 'predicted_risk' ? (
+                    /* ML predictions get a distinct badge instead of SeverityBadge.
+                       The dashed border is the primary visual signal even in grayscale. */
+                    <span
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px]
+                        font-medium border border-dashed
+                        text-text-muted border-text-muted/50 bg-surface-1"
+                      title="ML prediction — not a confirmed breach"
+                    >
+                      ~ ML
+                    </span>
+                  ) : (
+                    <SeverityBadge severity={item.severity} />
+                  )}
                 </div>
 
                 {/* Stake row — the money / hours line */}
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <span className="text-xs text-accent-disruption tabular-nums font-medium">
+                  <span
+                    className={`text-xs tabular-nums font-medium ${
+                      item.kind === 'predicted_risk'
+                        ? 'text-text-muted'
+                        : 'text-accent-disruption'
+                    }`}
+                  >
                     {item.stake}
                   </span>
                   <span className="text-[10px] text-text-muted tabular-nums">
                     {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true })}
                   </span>
                 </div>
+                {/* Prediction disclaimer — only on predicted_risk items */}
+                {item.kind === 'predicted_risk' && (
+                  <div className="text-[10px] text-text-muted mt-0.5 italic">
+                    ML forecast · no regulatory citation · not a confirmed breach
+                  </div>
+                )}
               </div>
 
               {/* Arrow — only visible on hover/focus */}

@@ -2,10 +2,15 @@
 
 ## System Architecture
 
-RouteX is a two-tier application: a **React 19 single-page application** (frontend) that communicates
-with a **FastAPI async backend** (backend) over REST. All data is sourced from a local SQLite database
-seeded deterministically at startup. An optional language layer using **watsonx.ai Granite** can be
-enabled for natural-language assistant responses; the system is fully functional without it.
+RouteX is a **three-layer application**:
+
+1. **Deterministic engines** (`app/engines/`) — classify excursion severity, score disruption impact, rank reroutes and fleet assets. Every verdict carries a `Decision` audit trail. These never change.
+2. **Language layer** (`app/agents/`) — explains engine output via watsonx.ai Granite or a deterministic template fallback. Optional.
+3. **Predictive layer** (`app/ml/`) — forecasts future states (P(breach within 4h)). Parallel to the engines, never inside them. Disabled by default (`ML_ENABLED=false`); the system is fully functional without it.
+
+The frontend is a React 19 SPA communicating over REST with the FastAPI backend. All data is sourced from a local SQLite database seeded deterministically at startup.
+
+**Three-layer separation guarantee:** The ML layer may never classify excursion severity, assign a regulatory citation, decide a disposition, or produce any value that a `Decision` record depends on. Severity classification stays in `app/engines/cold_chain.py` against the YAML rule packs.
 
 ```mermaid
 graph TD
@@ -17,14 +22,29 @@ graph TD
 
     subgraph Backend — FastAPI + Python
         API[REST API /api/v1]
-        ENG_CC[ColdChain Engine]
-        ENG_IMP[Impact Engine]
-        ENG_RR[Rerouting Engine]
-        ENG_FL[Fleet Engine]
-        ENG_PQ[Priority Queue Engine]
-        AG[Assistant Agent]
-        LLM[LLM Client — watsonx.ai]
-        TPL[Template Fallback]
+
+        subgraph Layer1 [Layer 1 — Deterministic Engines]
+            ENG_CC[ColdChain Engine — classifies severity]
+            ENG_IMP[Impact Engine]
+            ENG_RR[Rerouting Engine]
+            ENG_FL[Fleet Engine]
+            ENG_PQ[Priority Queue Engine]
+        end
+
+        subgraph Layer2 [Layer 2 — Language]
+            AG[Assistant Agent]
+            LLM[LLM Client — watsonx.ai]
+            TPL[Template Fallback]
+        end
+
+        subgraph Layer3 [Layer 3 — Predictive ML — app/ml/]
+            ML_REG[Registry — loads artifacts]
+            ML_FEAT[features.py — shared train+serve]
+            ML_PRED[Excursion Forecaster]
+            ML_BATCH[Batch Forecaster]
+            DB_PRED[(predictions table)]
+        end
+
         DB[(SQLite — supply_chain.db)]
         SSE[SSE Stream /events]
 
@@ -38,6 +58,13 @@ graph TD
         LLM -->|WATSONX_ENABLED=false| TPL
         API --> DB
         API --> SSE
+        ML_REG --> ML_PRED
+        ML_FEAT --> ML_PRED
+        ML_BATCH --> ML_PRED
+        ML_BATCH --> DB_PRED
+        API --> ML_BATCH
+        API --> DB_PRED
+        ENG_PQ -.->|optional prediction_rows| ML_PRED
     end
 
     subgraph IBM Cloud — Optional
@@ -65,6 +92,7 @@ graph TD
 | **Decision Engines** | Pure Python (no external deps) | Five deterministic engines: ColdChain, Impact, Rerouting, Fleet, PriorityQueue |
 | **Assistant Agent** | `app/agents/assistant.py` | Intent classification → engine tool calls → LLM or template composition |
 | **LLM Client** | `ibm-watsonx-ai` (optional) | Wraps `ibm/granite-13b-instruct-v2`; falls back to deterministic templates when unavailable |
+| **Predictive ML Layer** | `app/ml/` — `scikit-learn==1.5.2` only | Model 1 (Excursion Forecaster): P(breach within 4h), calibrated probability, batch serving. Disabled by default (`ML_ENABLED=false`). Never classifies severity. |
 | **Database** | SQLite + aiosqlite + SQLAlchemy 2 | File-based, no server; seeded deterministically via `python -m app.seed --seed 42` |
 | **Seed / Fixtures** | `app/seed/` + `app/export_fixtures.py` | Generates all synthetic data, seeds the DB, and exports JSON fixtures to the frontend |
 | **Simulation Harness** | `app/simulation/replay.py` | Clock-driven replay of the scripted TYPHOON_VACCINE scenario for demo |

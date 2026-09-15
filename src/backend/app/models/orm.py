@@ -220,3 +220,31 @@ class RerouteOptionRow(Base):
     delta_days: Mapped[float] = mapped_column(Float)
     delta_cost_usd: Mapped[float] = mapped_column(Float)
     data: Mapped[dict] = mapped_column(JSON)
+
+
+class PredictionRow(Base):
+    """
+    ML-layer predictions.
+
+    These rows are NEVER read by the deterministic engines and NEVER influence
+    a Decision, severity, citation, or disposition.  They are served via
+    /api/v1/predictions/* endpoints and surfaced in the UI with distinct visual
+    treatment (dashed badge, probability shown, no regulatory citation).
+    """
+    __tablename__ = "predictions"
+    __table_args__ = (
+        # Hot path: all predictions for one shipment, newest first
+        Index("ix_predictions_subject_ts", "subject_type", "subject_id", "predicted_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    model_id: Mapped[str] = mapped_column(String, index=True)
+    model_version: Mapped[str] = mapped_column(String)
+    subject_type: Mapped[str] = mapped_column(String, index=True)   # "shipment" | "leg"
+    subject_id: Mapped[str] = mapped_column(String, index=True)
+    predicted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    horizon_hours: Mapped[float] = mapped_column(Float)
+    value: Mapped[float] = mapped_column(Float)         # calibrated probability 0–1
+    confidence: Mapped[float] = mapped_column(Float)
+    features: Mapped[dict] = mapped_column(JSON)        # feature vector snapshot
+    baseline_value: Mapped[float] = mapped_column(Float)

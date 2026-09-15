@@ -309,6 +309,7 @@ class PriorityItemKind(str, Enum):
     shipment_exception = "shipment_exception"
     excursion = "excursion"
     idle_asset = "idle_asset"
+    predicted_risk = "predicted_risk"   # ML prediction — dashed visual, no citation
 
 
 class PriorityItem(BaseModel):
@@ -414,3 +415,29 @@ class PriorityItemWithScore(BaseModel):  # backend-only
     item: PriorityItem
     score: float          # 0–100
     score_components: dict[str, float]   # component breakdown returned for transparency
+
+
+class Prediction(BaseModel):  # backend-only
+    """
+    A single prediction from the ML layer.
+
+    Boundary: this model is NEVER written into the excursions table and NEVER
+    carries a severity classification, regulatory citation, or disposition.
+    Severity classification stays in app/engines/cold_chain.py against the
+    YAML rule packs, unchanged by this layer.
+
+    Every Prediction carries the full feature vector used so the operator can
+    see why the model flagged this shipment (explainability via tooltip).
+    The displayed probability is always the calibrated value (CalibratedClassifierCV).
+    """
+    id: str
+    model_id: str
+    model_version: str
+    subject_type: str                               # "shipment" | "leg"
+    subject_id: str
+    predicted_at: datetime
+    horizon_hours: float                            # 4.0 for excursion forecaster
+    value: float                                    # calibrated P(breach) 0–1
+    confidence: float                               # same as value for binary classifier
+    features: dict[str, Union[float, int, str]]    # feature vector used
+    baseline_value: float                           # B1 heuristic output for same input

@@ -4,13 +4,24 @@ import {
   ResponsiveContainer, CartesianGrid,
 } from 'recharts';
 import { format } from 'date-fns';
-import type { SensorReading, SensorGap, Excursion } from '@/types/domain';
+import type { SensorReading, SensorGap, Excursion, Prediction } from '@/types/domain';
 
 interface TemperatureTraceProps {
   readings: SensorReading[];
   gaps: SensorGap[];
   excursions: Excursion[];
   tempRangeC: { min: number; max: number };
+  /**
+   * Optional ML breach-risk prediction for this shipment.
+   * When provided, a dashed forward-projected band is drawn beyond the last
+   * real reading. This is VISUALLY DISTINCT from the observed trace — the
+   * dashed band must never be mistaken for actual sensor data.
+   *
+   * The band represents the forecast horizon (4 hours forward from predictedAt).
+   * It carries the probability and a "ML forecast — not sensor data" label.
+   * No regulatory citation is ever shown here.
+   */
+  prediction?: Prediction;
 }
 
 // A point in the Recharts data array.
@@ -55,6 +66,7 @@ export function TemperatureTrace({
   gaps,
   excursions,
   tempRangeC,
+  prediction,
 }: TemperatureTraceProps) {
   const { data, gapRegions, yDomain } = useMemo(() => {
     if (readings.length === 0) {
@@ -137,6 +149,20 @@ export function TemperatureTrace({
 
   const openExcursions = excursions.filter((e) => e.endedAt === null);
   const lastTs = data[data.length - 1]?.ts ?? 0;
+
+  // ML forecast band: drawn from lastTs forward to lastTs + horizonHours
+  // NEVER drawn over observed data. Visually separated with a distinct colour + dashed stroke.
+  const forecastBand = useMemo(() => {
+    if (!prediction) return null;
+    const horizonMs = prediction.horizonHours * 60 * 60 * 1000;
+    return {
+      x1: lastTs,
+      x2: lastTs + horizonMs,
+      probability: prediction.value,
+      pct: Math.round(prediction.value * 100),
+      isAlert: prediction.value >= 0.5,
+    };
+  }, [prediction, lastTs]);
 
   return (
     <div className="space-y-2">
@@ -222,6 +248,37 @@ export function TemperatureTrace({
             />
           ))}
 
+          {/* ── ML Forecast band ──────────────────────────────────────── */}
+          {/* VISUALLY DISTINCT from observed trace: hatched, amber/orange  */}
+          {/* NO regulatory citation. Shows probability + horizon only.    */}
+          {forecastBand && (
+            <>
+              <ReferenceArea
+                x1={forecastBand.x1}
+                x2={forecastBand.x2}
+                fill={forecastBand.isAlert ? '#e8a03a' : '#7a99b8'}
+                fillOpacity={0.08}
+                stroke={forecastBand.isAlert ? '#e8a03a' : '#7a99b8'}
+                strokeOpacity={0.35}
+                strokeWidth={0.5}
+                strokeDasharray="4 3"
+              />
+              <ReferenceLine
+                x={forecastBand.x1}
+                stroke={forecastBand.isAlert ? '#e8a03a' : '#7a99b8'}
+                strokeDasharray="3 2"
+                strokeOpacity={0.6}
+                strokeWidth={1}
+                label={{
+                  value: `~ ${forecastBand.pct}% risk (4h forecast)`,
+                  position: 'insideTopRight',
+                  fill: forecastBand.isAlert ? '#e8a03a' : '#7a99b8',
+                  fontSize: 9,
+                }}
+              />
+            </>
+          )}
+
           {/* ── Data gap regions ───────────────────────────────────────── */}
           {gapRegions.map((g, i) => (
             <ReferenceArea
@@ -291,6 +348,38 @@ export function TemperatureTrace({
             {gapRegions.map((g) => `${g.durationMinutes} min`).join(', ')}.{' '}
             Temperature is unknown during this period — do not interpolate.
           </span>
+        </div>
+      )}
+
+      {/* ML prediction annotation — visually distinct from excursion annotations */}
+      {forecastBand && (
+        <div className="flex items-start gap-2 px-1 mt-1">
+          <span
+            className={[
+              'inline-block shrink-0 w-3 h-3 rounded-sm border mt-0.5',
+              forecastBand.isAlert
+                ? 'bg-accent-disruption/10 border-accent-disruption/50'
+                : 'bg-text-muted/10 border-text-muted/40',
+            ].join(' ')}
+            aria-hidden="true"
+          />
+          <div className="text-xs space-y-0.5">
+            <div
+              className={
+                forecastBand.isAlert
+                  ? 'text-accent-disruption font-medium'
+                  : 'text-text-muted'
+              }
+            >
+              {forecastBand.isAlert ? 'ALERT' : 'WATCH'} —{' '}
+              {forecastBand.pct}% predicted breach risk within{' '}
+              {prediction!.horizonHours}h
+            </div>
+            <div className="text-text-muted">
+              ML forecast only — not sensor data. No regulatory citation.
+              {prediction!.value < 0.5 && ' Below 50%: low confidence watch signal.'}
+            </div>
+          </div>
         </div>
       )}
 

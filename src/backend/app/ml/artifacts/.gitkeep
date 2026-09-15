@@ -1,0 +1,3 @@
+# ML model artifacts — committed joblib files and model cards go here.
+# The training scripts (app/ml/train/) write to this directory.
+# .gitkeep ensures the directory exists in a clean clone.
