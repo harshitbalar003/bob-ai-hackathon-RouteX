@@ -75,7 +75,7 @@ export function ShipmentDetail() {
           <Button
             variant="danger"
             size="sm"
-            onClick={() => navigate(`/cold-chain#${openCritical[0].id}`)}
+            onClick={() => navigate(`/tower/cold-chain#${openCritical[0].id}`)}
           >
             Review disposition
           </Button>
@@ -92,7 +92,7 @@ export function ShipmentDetail() {
         emptyFallback={
           <div className="text-text-muted text-sm">
             Shipment not found.{' '}
-            <Link to="/" className="text-accent-minor underline">
+            <Link to="/tower" className="text-accent-minor underline">
               Return to control tower
             </Link>
           </div>
@@ -114,7 +114,7 @@ export function ShipmentDetail() {
                   {relatedDisruptions.map((d) => (
                     <Link
                       key={d.id}
-                      to={`/disruptions/${d.id}`}
+                      to={`/tower/disruptions/${d.id}`}
                       className="text-xs text-accent-disruption hover:underline focus-visible:underline outline-none"
                     >
                       ⚠ {d.headline}
@@ -311,7 +311,7 @@ export function ShipmentDetail() {
                   Reroute options
                 </h2>
                 <Link
-                  to={`/reroutes?shipmentId=${s.id}`}
+                  to={`/tower/reroutes?shipmentId=${s.id}`}
                   className="text-sm text-accent-minor hover:underline focus-visible:underline outline-none"
                 >
                   Open workbench →

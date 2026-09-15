@@ -129,7 +129,7 @@ describe('buildPriorityQueue', () => {
     const excursions = [makeExcursion({ id: 'exc-42', shipmentId: 's1' })];
     const result = buildPriorityQueue(shipments, excursions, []);
     const item = result.find((r) => r.kind === 'excursion');
-    expect(item?.href).toBe('/cold-chain#exc-42');
+    expect(item?.href).toBe('/tower/cold-chain#exc-42');
   });
 
   it('each item has required fields: id, kind, refId, headline, stake, severity, href, updatedAt', () => {

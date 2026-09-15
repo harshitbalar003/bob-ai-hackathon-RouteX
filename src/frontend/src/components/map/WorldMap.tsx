@@ -237,7 +237,7 @@ export function WorldMap({ shipments, disruptions, assets }: WorldMapProps) {
             strokeDasharray={arc.dash}
             clipPath="url(#map-clip)"
             className="cursor-pointer"
-            onClick={() => navigate(`/shipments/${arc.id}`)}
+            onClick={() => navigate(`/tower/shipments/${arc.id}`)}
           >
             <title>{arc.id}</title>
           </path>

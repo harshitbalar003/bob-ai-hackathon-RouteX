@@ -35,7 +35,7 @@ export function buildPriorityQueue(
       headline: `${s.reference} — ${s.cargo.description}`,
       stake: `${formatUsd(s.cargo.valueUsd)} cargo · +${delay}h delay`,
       severity,
-      href: `/shipments/${s.id}`,
+      href: `/tower/shipments/${s.id}`,
       updatedAt: s.etaProjected,
     });
   }
@@ -52,7 +52,7 @@ export function buildPriorityQueue(
       headline: `Temperature breach — ${shipment.reference}`,
       stake: `${formatUsd(shipment.cargo.valueUsd)} cargo · ${e.minutesOutOfRange}m out of range`,
       severity: e.severity,
-      href: `/cold-chain#${e.id}`,
+      href: `/tower/cold-chain#${e.id}`,
       updatedAt: open ? e.startedAt : (e.endedAt ?? e.startedAt),
     });
   }
@@ -71,7 +71,7 @@ export function buildPriorityQueue(
       headline: `${a.type.replace('_', ' ')} idle — ${a.location.label}`,
       stake: `${a.idleSinceHours}h idle · ${a.capacity.value} ${a.capacity.unit}`,
       severity: a.idleSinceHours > 48 ? 'major' : 'minor',
-      href: `/fleet#${a.id}`,
+      href: `/tower/fleet#${a.id}`,
       updatedAt: a.idleSinceAt,
     });
   }

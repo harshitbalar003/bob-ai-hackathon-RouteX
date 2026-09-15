@@ -80,7 +80,7 @@ function ExcursionTableRow({ row, isHighlighted }: { row: ExcursionRow; isHighli
       <td className="py-2.5 px-3 text-sm">
         {ship ? (
           <Link
-            to={`/shipments/${ship.id}`}
+            to={`/tower/shipments/${ship.id}`}
             className="text-accent-minor hover:underline focus-visible:underline outline-none"
           >
             {ship.reference}
@@ -289,7 +289,7 @@ export function ColdChainMonitor() {
                     </span>
                     {ship && (
                       <Link
-                        to={`/shipments/${ship.id}`}
+                        to={`/tower/shipments/${ship.id}`}
                         className="text-xs text-accent-minor hover:underline focus-visible:underline outline-none"
                       >
                         View shipment →

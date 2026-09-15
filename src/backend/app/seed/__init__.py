@@ -33,6 +33,7 @@ from app.database import AsyncSessionLocal, engine
 from app.models.orm import Base, DisruptionRow
 from app.seed.generate import generate_world, load_scenario
 from app.seed.telemetry import generate_telemetry_for_shipment
+import app.auth.models  # noqa: F401 — registers UserRow on Base.metadata
 
 
 async def _drop_and_recreate() -> None:
@@ -199,7 +200,53 @@ async def seed(seed_value: int = 42) -> None:
     t3 = time.perf_counter()
     print(f"  export_fixtures: {t3 - t2:.1f}s")
 
-    print(f"\nâœ…  Seed complete in {t3 - t0:.1f}s total.\n")
+
+    # ── 6. Seed demo user (idempotent) ───────────────────────────────────────
+    print("\nSeeding demo user...")
+    await _seed_demo_user()
+    t4 = time.perf_counter()
+    print(f"  demo user: {t4 - t3:.1f}s")
+
+
+    print(f"\n[ok] Seed complete in {t4 - t0:.1f}s total.\n")
+
+
+async def _seed_demo_user() -> None:
+    """
+    Create the demo account if it does not exist.
+    Idempotent — running seed twice does not create a duplicate.
+
+    Demo credentials (printed on the login page):
+        email:    demo@coldfront.app
+        password: demo-control-tower
+    """
+    from app.auth.models import UserRow
+    from app.auth.service import hash_password
+    from sqlalchemy import select
+
+    demo_email = "demo@coldfront.app"
+    demo_password = "demo-control-tower"
+
+    async with AsyncSessionLocal() as session:
+        existing = await session.execute(
+            select(UserRow).where(UserRow.email == demo_email).limit(1)
+        )
+        if existing.scalar_one_or_none() is not None:
+            print("  [ok] Demo user already exists -- skipped.")
+            return
+
+        user = UserRow(
+            email=demo_email,
+            password_hash=hash_password(demo_password),
+            full_name="Demo Operator",
+            created_at=datetime.now(timezone.utc),
+            is_demo=True,
+        )
+        session.add(user)
+        await session.commit()
+        print("  [ok] Demo user created: demo@coldfront.app / demo-control-tower")
+
+
 
 
 # Expose for __main__.py

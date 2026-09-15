@@ -4,6 +4,7 @@
  * Components never call fetch directly.
  *
  * Error handling:
+ *  - 401: clears the session (AuthContext.clearSession) and redirects to /login once.
  *  - 5xx: surfaces the backend error message — never silently falls back to mock.
  *  - Network error (connection refused): tells the operator what command to run.
  */
@@ -11,12 +12,27 @@ import type { DataAdapter } from './types';
 
 const BASE = (import.meta.env.VITE_API_BASE_URL ?? '/api') + '/v1';
 
+// Module-level 401 redirect guard — prevents a loop if /me itself 401s.
+let _clearSessionFn: (() => void) | null = null;
+let _navigateFn: ((path: string) => void) | null = null;
+
+/**
+ * Wire up the auth clear + navigate callbacks from AuthProvider.
+ * Called once from main.tsx after the router is mounted.
+ */
+export function wireAuthCallbacks(
+  clearSession: () => void,
+  navigate: (path: string) => void,
+) {
+  _clearSessionFn = clearSession;
+  _navigateFn = navigate;
+}
+
 async function get<T>(path: string): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${BASE}${path}`);
+    res = await fetch(`${BASE}${path}`, { credentials: 'include' });
   } catch (err) {
-    // Connection refused or DNS failure
     const msg =
       err instanceof TypeError && err.message.includes('fetch')
         ? `Cannot reach backend at ${BASE}${path}.\n` +
@@ -24,6 +40,15 @@ async function get<T>(path: string): Promise<T> {
         : String(err);
     throw new Error(msg);
   }
+
+  if (res.status === 401) {
+    // Clear session once; the ProtectedRoute will redirect to /login.
+    _clearSessionFn?.();
+    const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+    _navigateFn?.(`/login?returnTo=${returnTo}`);
+    throw new Error('Session expired — please sign in again');
+  }
+
   if (!res.ok) {
     const body = await res.text().catch(() => '(no body)');
     throw new Error(`API error ${res.status} on ${path}: ${body}`);

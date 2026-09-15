@@ -59,7 +59,7 @@ function MatchDetail({
           <div className="flex items-center gap-3">
             <span className="text-text-muted">Shipment</span>
             <Link
-              to={`/shipments/${match.shipmentId}`}
+              to={`/tower/shipments/${match.shipmentId}`}
               className="text-accent-minor hover:underline focus-visible:underline outline-none font-medium"
             >
               {shipmentRef ?? match.shipmentId}

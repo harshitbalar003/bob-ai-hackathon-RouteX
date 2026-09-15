@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import create_tables
 from app.rules import load_rule_packs
+import app.auth.models  # noqa: F401 — registers UserRow on Base.metadata
 
 
 @asynccontextmanager
@@ -47,6 +48,9 @@ app.add_middleware(
 )
 
 # ── Routers ───────────────────────────────────────────────────────────────────
+from fastapi import Depends  # noqa: E402
+from app.auth import current_user  # noqa: E402
+from app.auth.router import router as auth_router  # noqa: E402
 from app.routers.health import router as health_router  # noqa: E402
 from app.routers.disruptions import router as disruptions_router  # noqa: E402
 from app.routers.shipments import router as shipments_router  # noqa: E402
@@ -56,11 +60,15 @@ from app.routers.priority_queue import router as pq_router  # noqa: E402
 from app.routers.stream import router as stream_router  # noqa: E402
 from app.routers.assistant import router as assistant_router  # noqa: E402
 
+# Auth and health are open; all other routers require a valid session cookie.
+_auth_dep = [Depends(current_user)]
+
+app.include_router(auth_router, prefix="/api/v1")
 app.include_router(health_router, prefix="/api/v1")
-app.include_router(disruptions_router, prefix="/api/v1")
-app.include_router(shipments_router, prefix="/api/v1")
-app.include_router(cold_chain_router, prefix="/api/v1")
-app.include_router(fleet_router, prefix="/api/v1")
-app.include_router(pq_router, prefix="/api/v1")
-app.include_router(stream_router, prefix="/api/v1")
-app.include_router(assistant_router, prefix="/api/v1")
+app.include_router(disruptions_router, prefix="/api/v1", dependencies=_auth_dep)
+app.include_router(shipments_router, prefix="/api/v1", dependencies=_auth_dep)
+app.include_router(cold_chain_router, prefix="/api/v1", dependencies=_auth_dep)
+app.include_router(fleet_router, prefix="/api/v1", dependencies=_auth_dep)
+app.include_router(pq_router, prefix="/api/v1", dependencies=_auth_dep)
+app.include_router(stream_router, prefix="/api/v1", dependencies=_auth_dep)
+app.include_router(assistant_router, prefix="/api/v1", dependencies=_auth_dep)

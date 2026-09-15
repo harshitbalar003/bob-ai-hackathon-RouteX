@@ -113,7 +113,7 @@ export function DisruptionDetail() {
         emptyFallback={
           <div className="text-text-muted text-sm">
             Disruption not found.{' '}
-            <Link to="/" className="text-accent-minor underline">
+            <Link to="/tower" className="text-accent-minor underline">
               Return to control tower
             </Link>
           </div>
@@ -253,7 +253,7 @@ export function DisruptionDetail() {
                 size="sm"
                 onClick={() => {
                   const first = [...selected][0];
-                  navigate(`/reroutes?shipmentId=${first}`);
+                  navigate(`/tower/reroutes?shipmentId=${first}`);
                 }}
               >
                 Review reroutes →
@@ -399,7 +399,7 @@ export function DisruptionDetail() {
                           </td>
                           <td className="py-2.5 px-3">
                             <Link
-                              to={`/shipments/${s.id}`}
+                              to={`/tower/shipments/${s.id}`}
                               className="text-accent-minor hover:underline focus-visible:underline outline-none"
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -441,7 +441,7 @@ export function DisruptionDetail() {
                           </td>
                           <td className="py-2.5 px-3">
                             <Link
-                              to={`/reroutes?shipmentId=${s.id}`}
+                              to={`/tower/reroutes?shipmentId=${s.id}`}
                               className="text-xs text-accent-minor hover:underline focus-visible:underline outline-none"
                               onClick={(e) => e.stopPropagation()}
                             >

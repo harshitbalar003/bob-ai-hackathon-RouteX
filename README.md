@@ -127,8 +127,11 @@ python -m app.seed --seed 42
 # Step 2 — run the frontend in mock mode
 cd src/frontend
 npm install
-npm run dev        # → http://localhost:5173  (shows MOCK indicator)
+npm run dev        # → http://localhost:5173  (shows MOCK · stubbed auth indicator)
 ```
+
+> **Demo account** (seeded automatically): `demo@coldfront.app` / `demo-control-tower`
+> Click **Enter demo** on the landing page — one click to the control tower.
 
 ### Manual — full stack (frontend + live API)
 
@@ -175,7 +178,7 @@ cd src/frontend && npm test
 - **SQLite, not PostgreSQL:** Production-grade databases require only changing `DATABASE_URL` — the async SQLAlchemy setup already supports PostgreSQL.
 - **SSE stream is disabled by default:** Set `FEATURE_SSE=true` to enable the real-time event stream. The priority queue supports `?since=` polling as an alternative.
 - **Lane network is representative, not complete:** The rerouting engine's lane graph covers the major global nodes used in the scripted scenarios; it is not a comprehensive freight network.
-- **No authentication:** All API routes are open — suitable for a hackathon demo, not for production.
+- **Authentication is present but not hardened:** Passwords are hashed with bcrypt (cost 12), session tokens are stored in httpOnly SameSite=Lax cookies, and a demo account is seeded automatically. This is not production-hardened — there is no email verification, no password reset, no account lockout beyond rate limiting, and CORS remains open. Demo credentials: `demo@coldfront.app` / `demo-control-tower`.
 - **CORS is fully open:** `allow_origins=["*"]` must be tightened before any public deployment.
 
 ---

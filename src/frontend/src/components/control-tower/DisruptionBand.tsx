@@ -29,7 +29,7 @@ export function DisruptionBand({ disruptions }: DisruptionBandProps) {
       {disruptions.map((dis) => (
         <Link
           key={dis.id}
-          to={`/disruptions/${dis.id}`}
+          to={`/tower/disruptions/${dis.id}`}
           className="flex items-center gap-3 px-3 py-2 rounded border border-surface-border bg-surface-base
             hover:border-accent-disruption/50 hover:bg-surface-raised transition-colors duration-75
             focus-visible:ring-2 focus-visible:ring-accent-minor outline-none shrink-0 min-w-0"

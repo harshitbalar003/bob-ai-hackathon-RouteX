@@ -98,11 +98,14 @@ submission:
     published port and airport codes rather than pulled from carrier APIs, so
     reroute feasibility is plausible but not bookable. Redeployment matching uses
     a greedy assignment where min-cost-flow would be correct at scale; the
-    trade-off is marked in the source. There is no authentication or
-    multi-tenancy, and persistence is single-node SQLite. The fleet screen is our
-    shallowest surface because we deliberately spent depth on the cold chain and
-    impact engines. Tested on desktop Chrome and Firefox at 1440px; usable at
-    768px but not built for mobile. All shipment, party, cargo, and telemetry
+    trade-off is marked in the source. Authentication is present — bcrypt-hashed
+    passwords, httpOnly JWT session cookies, rate-limited login, and a seeded
+    demo account — but is not hardened for production (no email verification,
+    no password reset, CORS open). Demo credentials: demo@coldfront.app /
+    demo-control-tower. Persistence is single-node SQLite. The fleet screen is
+    our shallowest surface because we deliberately spent depth on the cold chain
+    and impact engines. Tested on desktop Chrome and Firefox at 1440px; usable
+    at 768px but not built for mobile. All shipment, party, cargo, and telemetry
     data is synthetic by design, per the hackathon data compliance rules.
 
 # =============================================================================

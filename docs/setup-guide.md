@@ -50,8 +50,11 @@ Run it twice with the same seed — you get a byte-identical database.
 uvicorn app.main:app --reload --port 8000
 ```
 
-API docs available at http://localhost:8000/docs  
+API docs available at http://localhost:8000/docs
 Health check: http://localhost:8000/api/v1/health
+
+> **Demo account** (seeded in step 2): `demo@coldfront.app` / `demo-control-tower`
+> Open http://localhost:5173 and click **Enter demo** on the landing page — one click to the control tower.
 
 ### 4 — Frontend setup
 
@@ -132,6 +135,7 @@ No `.env` file is required for local development. All defaults work out of the b
 | `VITE_DATA_SOURCE` | `mock` | Set to `api` to use the live backend |
 | `VITE_API_BASE_URL` | `/api` | Proxied to `:8000` by Vite dev server |
 | `WATSONX_ENABLED` | `false` | Set to `true` + provide API key for LLM features |
+| `SESSION_SECRET` | `dev-secret-change-in-production` | JWT signing key. A warning is logged when the development default is in use. **Change before any non-local deployment.** |
 
 ---
 

@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     pq_weight_waste: float = 0.55
     pq_weight_match: float = 0.45
 
+    # ── Authentication ────────────────────────────────────────────────────────
+    # Change SESSION_SECRET before any non-local deployment.
+    # The app logs a warning when the development default is in use.
+    session_secret: str = "dev-secret-change-in-prod-2025x!"
+
     # ── Features ──────────────────────────────────────────────────────────────
     feature_sse: bool = False          # SSE stream; set FEATURE_SSE=true to enable
     watsonx_enabled: bool = False      # language layer; no key needed for fallback
